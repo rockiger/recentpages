@@ -6,21 +6,21 @@
 #
 from collections import defaultdict, OrderedDict
 import copy
-import gobject
-import gtk
+from gi.repository import Gtk
+from gi.repository import GObject
 import logging
 from pprint import pprint
 from zim.actions import action
 from zim.gui.widgets import Dialog
 from zim.gui.widgets import InputEntry
+from zim.gui.mainwindow import MainWindowExtension
 from zim.history import HistoryList
 from zim.history import HistoryPath
 from zim.notebook import Path
 from zim.plugins import PluginClass
-from zim.plugins import WindowExtension
-from zim.plugins import extends
+#from zim.plugins import extends
 from zim.search import *
-from zim.index import IndexPath
+#from zim.index import IndexPath
 from copy import deepcopy
 import sys
 import inspect
@@ -40,8 +40,8 @@ Show the recently viewed pages in a popup window.
     }
 
 
-@extends('MainWindow')
-class RecentPagesMainWindowExtension(WindowExtension):
+#@extends('MainWindow')
+class RecentPagesMainWindowExtension(MainWindowExtension):
 
     uimanager_xml = '''
     <ui>
@@ -63,14 +63,14 @@ class RecentPagesMainWindowExtension(WindowExtension):
 
         #init
         #TODO: Get Items from pathbar
-        self.history = self.window.ui.history.get_recent()
+        self.history = self.window.history.get_recent()
 
         # preferences
         # self.plugin.preferences['keystroke_delay']
 
 
         # Gtk
-        self.gui = Dialog(self.window.ui, _('Recent Pages'), buttons=None, defaultwindowsize=(300, -1))
+        self.gui = Dialog(self.window, _('Recent Pages'), buttons=None, defaultwindowsize=(300, -1))
 
         (px, py) = self.window.get_position()
         (pw, ph) = self.window.get_size()
@@ -85,13 +85,13 @@ class RecentPagesMainWindowExtension(WindowExtension):
         #self.gui.vbox.pack_start(self.inputEntry, False)
 
 
-        self.listmodel = gtk.ListStore(str)
+        self.listmodel = Gtk.ListStore(str)
 
         # My own model for creating dialog labels and later retrieving them
         self.model = OrderedDict()
         for page in self.history:
             ky = str(page)
-            ky = ky[1:-1]
+            ky = ky[1:]
             ky = ky.split(":")
             ky = ky[-1].strip()
             self.model[ky] = page
@@ -99,19 +99,19 @@ class RecentPagesMainWindowExtension(WindowExtension):
         # populate the treeview
         for row in self.model.keys():
             self.listmodel.append([row])
-        self.treeview = gtk.TreeView(model=self.listmodel)
+        self.treeview = Gtk.TreeView(model=self.listmodel)
         self.treeview.set_headers_visible(False)
         # cellrenderer to render the text
-        cell = gtk.CellRendererText()
+        cell = Gtk.CellRendererText()
         # the text in the first column should be in boldface
         # the column is created
-        col = gtk.TreeViewColumn("", cell, text=0)
+        col = Gtk.TreeViewColumn("", cell, text=0)
         # and it is appended to the treeview
         self.treeview.append_column(col)
 
         self.treeview.connect("row-activated", self.on_row_activated)
 
-        self.gui.vbox.pack_start(self.treeview, False)
+        self.gui.vbox.pack_start(self.treeview, False, False, 0)
 
         self.gui.show_all()
 
@@ -121,7 +121,7 @@ class RecentPagesMainWindowExtension(WindowExtension):
         #ui.open_page(path)
         (tm, it) = self.treeview.get_selection().get_selected()
         ky = tm[it][0]
-        self.window.ui.open_page(self.model[ky])
+        self.window.open_page(self.model[ky])
         self.gui.destroy()
-        print "on_change"
-        print selection
+        print("on_change")
+#        print(selection)
